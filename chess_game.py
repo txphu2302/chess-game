@@ -37,6 +37,7 @@ except:
     print("Warning: Sound files not found. Game will run without sound effects.")
     MOVE_SOUND = None
     CAPTURE_SOUND = None
+    CASTLE_SOUND = None
     CHECK_SOUND = None
 
 # Load piece images
@@ -232,10 +233,60 @@ piece_square_tables = {
     ]
 }
 
-# Improved AI evaluation
+# End game king piece square table
+king_endgame_table = [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]
+
+# Piece values
 piece_values = {chess.PAWN: 100, chess.KNIGHT: 320, chess.BISHOP: 330, 
                 chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
 
+# Global transposition table
+transposition_table = {}
+
+# Cải thiện đánh giá nước đi cho việc sắp xếp
+def evaluate_move(board, move):
+    score = 0
+    
+    # Ưu tiên nước ăn quân
+    if board.is_capture(move):
+        victim_piece = board.piece_at(move.to_square)
+        attacker_piece = board.piece_at(move.from_square)
+        if victim_piece and attacker_piece:
+            # MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
+            score += 10 * piece_values.get(victim_piece.piece_type, 0) - piece_values.get(attacker_piece.piece_type, 0) / 10
+    
+    # Ưu tiên phong tốt
+    if move.promotion:
+        score += 900
+    
+    # Ưu tiên nước chiếu
+    board.push(move)
+    if board.is_check():
+        score += 50
+    board.pop()
+    
+    # Ưu tiên các nước đi vào trung tâm cho quân tốt và mã
+    piece = board.piece_at(move.from_square)
+    if piece:
+        if piece.piece_type == chess.PAWN or piece.piece_type == chess.KNIGHT:
+            to_file = chess.square_file(move.to_square)
+            to_rank = chess.square_rank(move.to_square)
+            # Điểm cho ô ở gần trung tâm
+            center_distance = abs(3.5 - to_file) + abs(3.5 - to_rank)
+            score += (4 - center_distance) * 5
+    
+    return score
+
+# Improved board evaluation
 def evaluate_board(board, difficulty):
     if board.is_checkmate():
         # Return extreme value for checkmate
@@ -255,60 +306,275 @@ def evaluate_board(board, difficulty):
     # Position score (only for medium/hard)
     if difficulty != "easy":
         for piece_type in piece_square_tables:
-            for square in board.pieces(piece_type, chess.WHITE):
-                score += piece_square_tables[piece_type][square] / 10
-            for square in board.pieces(piece_type, chess.BLACK):
-                score -= piece_square_tables[piece_type][63 - square] / 10
+            # Special handling for king in endgame
+            if piece_type == chess.KING and len(list(board.piece_map().keys())) <= 12:
+                # Endgame - use endgame king table
+                for square in board.pieces(piece_type, chess.WHITE):
+                    score += king_endgame_table[square] / 10
+                for square in board.pieces(piece_type, chess.BLACK):
+                    score -= king_endgame_table[63 - square] / 10
+            else:
+                # Normal piece square tables
+                for square in board.pieces(piece_type, chess.WHITE):
+                    score += piece_square_tables[piece_type][square] / 10
+                for square in board.pieces(piece_type, chess.BLACK):
+                    score -= piece_square_tables[piece_type][63 - square] / 10
     
-    # Mobility (only for hard)
+    # Chỉ áp dụng các đánh giá nâng cao cho chế độ khó
     if difficulty == "hard":
-        # Save the current turn
+        # Tính điểm di động quân
         current_turn = board.turn
         
-        # Calculate white mobility
+        # Đánh giá di động của trắng
         board.turn = chess.WHITE
         white_mobility = len(list(board.legal_moves))
         
-        # Calculate black mobility
+        # Đánh giá di động của đen
         board.turn = chess.BLACK
         black_mobility = len(list(board.legal_moves))
         
-        # Restore the original turn
+        # Khôi phục lượt đi ban đầu
         board.turn = current_turn
         
-        # Add mobility score
+        # Thêm điểm di động
         score += (white_mobility - black_mobility) * 0.1
+        
+        # Đánh giá an toàn của vua
+        white_king_square = board.king(chess.WHITE)
+        black_king_square = board.king(chess.BLACK)
+        
+        # Khuyến khích nhập thành cho vua
+        if white_king_square in [chess.G1, chess.C1]:
+            score += 30
+        if black_king_square in [chess.G8, chess.C8]:
+            score -= 30
+        
+        # Đánh giá kiểm soát trung tâm
+        center_squares = [chess.D4, chess.E4, chess.D5, chess.E5]
+        for square in center_squares:
+            # Kiểm tra quân kiểm soát hoặc chiếm giữ ô trung tâm
+            piece = board.piece_at(square)
+            if piece:
+                if piece.color == chess.WHITE:
+                    score += 10
+                else:
+                    score -= 10
+            
+            # Kiểm tra tốt kiểm soát trung tâm
+            for pawn_square in board.pieces(chess.PAWN, chess.WHITE):
+                pawn_file = chess.square_file(pawn_square)
+                pawn_rank = chess.square_rank(pawn_square)
+                
+                # Xem xét các ô tốt kiểm soát
+                if 2 <= pawn_file <= 5 and 3 <= pawn_rank <= 4:
+                    score += 5
+            
+            for pawn_square in board.pieces(chess.PAWN, chess.BLACK):
+                pawn_file = chess.square_file(pawn_square)
+                pawn_rank = chess.square_rank(pawn_square)
+                
+                if 2 <= pawn_file <= 5 and 3 <= pawn_rank <= 4:
+                    score -= 5
+        
+        # Phát triển quân sớm trong giai đoạn đầu
+        if len(list(board.piece_map().keys())) > 28:  # Giai đoạn đầu trận
+            # Khuyến khích phát triển quân sớm
+            developed_white = 0
+            developed_black = 0
+            
+            # Kiểm tra mã và tượng đã di chuyển chưa
+            if not board.piece_at(chess.B1) or board.piece_at(chess.B1).piece_type != chess.KNIGHT:
+                developed_white += 1
+            if not board.piece_at(chess.G1) or board.piece_at(chess.G1).piece_type != chess.KNIGHT:
+                developed_white += 1
+            if not board.piece_at(chess.C1) or board.piece_at(chess.C1).piece_type != chess.BISHOP:
+                developed_white += 1
+            if not board.piece_at(chess.F1) or board.piece_at(chess.F1).piece_type != chess.BISHOP:
+                developed_white += 1
+                
+            if not board.piece_at(chess.B8) or board.piece_at(chess.B8).piece_type != chess.KNIGHT:
+                developed_black += 1
+            if not board.piece_at(chess.G8) or board.piece_at(chess.G8).piece_type != chess.KNIGHT:
+                developed_black += 1
+            if not board.piece_at(chess.C8) or board.piece_at(chess.C8).piece_type != chess.BISHOP:
+                developed_black += 1
+            if not board.piece_at(chess.F8) or board.piece_at(chess.F8).piece_type != chess.BISHOP:
+                developed_black += 1
+            
+            score += developed_white * 10
+            score -= developed_black * 10
     
     return score
 
-def alpha_beta(board, depth, alpha, beta, is_max, difficulty):
+# Alpha-Beta with memory (transposition table)
+def alpha_beta_with_memory(board, depth, alpha, beta, is_max, difficulty):
+    # Tạo khóa băm cho vị trí
+    board_hash = board.fen()
+    
+    # Kiểm tra nếu vị trí đã được đánh giá trước đó
+    if board_hash in transposition_table and transposition_table[board_hash]["depth"] >= depth:
+        return transposition_table[board_hash]["score"]
+    
     if depth == 0 or board.is_game_over():
-        return evaluate_board(board, difficulty)
+        score = evaluate_board(board, difficulty)
+        # Lưu vào bảng
+        transposition_table[board_hash] = {"score": score, "depth": depth}
+        return score
     
     if is_max:
         max_eval = float('-inf')
-        for move in board.legal_moves:
+        
+        # Sắp xếp nước đi để tối ưu cắt tỉa
+        moves = list(board.legal_moves)
+        move_scores = []
+        for move in moves:
+            move_scores.append((move, evaluate_move(board, move)))
+        
+        # Sắp xếp nước đi từ tốt nhất đến kém nhất cho max
+        sorted_moves = [move for move, score in sorted(move_scores, key=lambda x: -x[1])]
+        
+        for move in sorted_moves:
             board.push(move)
-            eval = alpha_beta(board, depth - 1, alpha, beta, False, difficulty)
+            eval = alpha_beta_with_memory(board, depth - 1, alpha, beta, False, difficulty)
             board.pop()
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
             if beta <= alpha:
                 break
+        
+        # Lưu vào bảng
+        transposition_table[board_hash] = {"score": max_eval, "depth": depth}
         return max_eval
     else:
         min_eval = float('inf')
-        for move in board.legal_moves:
+        
+        # Sắp xếp nước đi để tối ưu cắt tỉa
+        moves = list(board.legal_moves)
+        move_scores = []
+        for move in moves:
+            move_scores.append((move, evaluate_move(board, move)))
+        
+        # Sắp xếp nước đi từ tốt nhất đến kém nhất cho min
+        sorted_moves = [move for move, score in sorted(move_scores, key=lambda x: x[1])]
+        
+        for move in sorted_moves:
             board.push(move)
-            eval = alpha_beta(board, depth - 1, alpha, beta, True, difficulty)
+            eval = alpha_beta_with_memory(board, depth - 1, alpha, beta, True, difficulty)
             board.pop()
             min_eval = min(min_eval, eval)
             beta = min(beta, eval)
             if beta <= alpha:
                 break
+        
+        # Lưu vào bảng
+        transposition_table[board_hash] = {"score": min_eval, "depth": depth}
         return min_eval
 
+# Quiescence search to avoid horizon effect
+def alpha_beta_quiescence(board, depth, alpha, beta, q_alpha, q_beta, difficulty):
+    # Đánh giá hiện tại
+    stand_pat = evaluate_board(board, difficulty)
+    
+    # Beta cutoff
+    if stand_pat >= beta:
+        return beta
+    
+    # Update alpha if needed
+    if stand_pat > alpha:
+        alpha = stand_pat
+    
+    # If reached max depth but position is not quiet, continue searching
+    if depth <= 0:
+        # Only consider captures and promotions
+        for move in board.legal_moves:
+            if board.is_capture(move) or move.promotion:
+                board.push(move)
+                score = -alpha_beta_quiescence(board, -1, -q_beta, -q_alpha, -q_beta, -q_alpha, difficulty)
+                board.pop()
+                
+                if score >= q_beta:
+                    return q_beta
+                if score > q_alpha:
+                    q_alpha = score
+        return q_alpha
+    
+    # Normal search
+    for move in board.legal_moves:
+        board.push(move)
+        score = -alpha_beta_quiescence(board, depth - 1, -beta, -alpha, -beta, -alpha, difficulty)
+        board.pop()
+        
+        if score >= beta:
+            return beta
+        if score > alpha:
+            alpha = score
+    
+    return alpha
+
+# Find best move at specified depth
+def find_best_move_at_depth(board, difficulty, depth):
+    global transposition_table
+    
+    moves = list(board.legal_moves)
+    if not moves:
+        return None
+    
+    move_scores = []
+    alpha = float('-inf')
+    beta = float('inf')
+    
+    # Đánh giá tất cả nước đi hợp lệ
+    for move in moves:
+        board.push(move)
+        score = -alpha_beta_with_memory(board, depth - 1, -beta, -alpha, True, difficulty)
+        board.pop()
+        move_scores.append((move, score))
+        alpha = max(alpha, score)
+    
+    # Sắp xếp nước đi theo điểm số
+    best_moves = sorted(move_scores, key=lambda x: x[1], reverse=True)
+    
+    if best_moves:
+        return best_moves[0][0]
+    return None
+
+# Find best move with timeout
+def find_best_move_with_timeout(board, difficulty, max_time=3.0):
+    start_time = time.time()
+    
+    # Đối với chế độ khó, bắt đầu với độ sâu thấp và tăng lên
+    if difficulty == "hard":
+        current_depth = 2
+        max_depth = 4
+        best_move = None
+        
+        while current_depth <= max_depth:
+            # Nếu quá thời gian, trả về nước đi tốt nhất tìm được trước đó
+            if time.time() - start_time > max_time and best_move:
+                return best_move
+            
+            move = find_best_move_at_depth(board, difficulty, current_depth)
+            if move:
+                best_move = move
+            
+            current_depth += 1
+            
+            # Nếu đã hết thời gian, dừng tìm kiếm
+            if time.time() - start_time > max_time:
+                break
+                
+        return best_move if best_move else find_best_move_at_depth(board, difficulty, 2)
+    else:
+        # Chế độ dễ và trung bình sử dụng phương thức thông thường
+        return find_best_move(board, difficulty)
+
+# Find best move
 def find_best_move(board, difficulty):
+    global transposition_table
+    # Xóa bảng đệm cho mỗi lượt mới để tránh sử dụng quá nhiều bộ nhớ
+    transposition_table = {}
+    
+    # Độ sâu tìm kiếm dựa trên độ khó
     depth = {"easy": 2, "medium": 3, "hard": 4}[difficulty]
     randomness_factor = {"easy": 0.5, "medium": 0.2, "hard": 0.0}[difficulty]
     
@@ -316,252 +582,172 @@ def find_best_move(board, difficulty):
     if not moves:
         return None
     
-    # Random move chance based on difficulty
+    # Di chuyển ngẫu nhiên dựa vào độ khó
     if random.random() < randomness_factor:
         return random.choice(moves)
     
-    best_move = None
-    best_score = float('-inf')
+    # Thêm tìm kiếm quiesce cho chế độ khó
+    use_quiescence = (difficulty == "hard")
+    
+    # Tối ưu: chỉ đánh giá nước đi tốt hơn ở mức cao nhất
+    move_scores = []
     alpha = float('-inf')
     beta = float('inf')
     
+    # Đánh giá tất cả nước đi hợp lệ
     for move in moves:
         board.push(move)
-        score = alpha_beta(board, depth - 1, alpha, beta, False, difficulty)
+        # Nếu là chế độ khó, dùng tìm kiếm quiesce
+        if use_quiescence:
+            score = -alpha_beta_quiescence(board, depth - 1, -beta, -alpha, -float('inf'), float('inf'), difficulty)
+        else:
+            score = -alpha_beta_with_memory(board, depth - 1, -beta, -alpha, False, difficulty)
         board.pop()
-        if score > best_score:
-            best_score = score
-            best_move = move
+        move_scores.append((move, score))
         alpha = max(alpha, score)
     
-    return best_move
+    # Sắp xếp các nước đi theo điểm và trả về nước đi tốt nhất
+    best_moves = sorted(move_scores, key=lambda x: x[1], reverse=True)
+    
+    # Nếu chế độ khó, luôn chọn nước đi tốt nhất
+    if difficulty == "hard":
+        return best_moves[0][0]
+    else:
+        # Chọn trong top nước đi tốt nhất để tăng tính ngẫu nhiên
+        # Chọn trong top 3 nước đi cho trung bình, top 5 cho dễ
+        top_n = 3 if difficulty == "medium" else 5
+        top_n = min(top_n, len(best_moves))
+        return random.choice([move for move, _ in best_moves[:top_n]])
 
-# Promotion dialog
-def get_promotion_choice():
-    choices = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
-    images_list = ["wQ", "wR", "wB", "wN"]
-    
-    # Create a dialog for promotion selection
-    dialog_width, dialog_height = 240, 80
-    dialog_x = (WIDTH - dialog_width) // 2
-    dialog_y = (HEIGHT - dialog_height) // 2
-    
-    running = True
-    choice = None
-    
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = pygame.mouse.get_pos()
-                if dialog_y <= y <= dialog_y + dialog_height:
-                    for i in range(4):
-                        piece_x = dialog_x + i * 60 + 10
-                        if piece_x <= x <= piece_x + 50:
-                            choice = choices[i]
-                            running = False
-        
-        # Draw dialog
-        pygame.draw.rect(screen, pygame.Color(40, 40, 40), 
-                       (dialog_x, dialog_y, dialog_width, dialog_height))
-        pygame.draw.rect(screen, pygame.Color(200, 200, 200), 
-                       (dialog_x, dialog_y, dialog_width, dialog_height), 3)
-        
-        # Draw pieces
-        for i, img_name in enumerate(images_list):
-            screen.blit(images[img_name], (dialog_x + i * 60 + 10, dialog_y + 15))
-        
-        font = pygame.font.SysFont("arial", 16)
-        text = font.render("Choose promotion piece", True, pygame.Color(255, 255, 255))
-        screen.blit(text, (dialog_x + (dialog_width - text.get_width()) // 2, dialog_y + 5))
-        
-        pygame.display.flip()
-    
-    return choice
-
-# Select difficulty
-def select_difficulty():
-    font = pygame.font.SysFont("arial", 32)
-    title_font = pygame.font.SysFont("arial", 42, bold=True)
-    difficulties = ["easy", "medium", "hard"]
-    selected = 1  # Default to medium
-    
-    # Create description texts
-    desc_font = pygame.font.SysFont("arial", 18)
-    descriptions = [
-        "AI makes random moves and basic strategy.",
-        "AI uses deeper search and better evaluation.",
-        "AI uses advanced evaluation and deeper search."
-    ]
-    
-    while True:
-        screen.fill(pygame.Color(30, 30, 30))
-        
-        # Draw title
-        title = title_font.render("Select AI Difficulty", True, pygame.Color(255, 255, 255))
-        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 4))
-        
-        # Draw options
-        for i, diff in enumerate(difficulties):
-            button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 3 + i * 80, 200, 60)
-            color = BUTTON_HOVER_COLOR if i == selected else BUTTON_COLOR
-            pygame.draw.rect(screen, color, button_rect, border_radius=5)
-            
-            # Draw button text
-            text = font.render(diff.capitalize(), True, pygame.Color(255, 255, 255))
-            screen.blit(text, (button_rect.centerx - text.get_width() // 2, 
-                             button_rect.centery - text.get_height() // 2))
-            
-            # Draw description
-            desc = desc_font.render(descriptions[i], True, pygame.Color(200, 200, 200))
-            screen.blit(desc, (WIDTH // 2 - desc.get_width() // 2, button_rect.bottom + 5))
-        
-        pygame.display.flip()
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    selected = (selected - 1) % 3
-                elif event.key == pygame.K_DOWN:
-                    selected = (selected + 1) % 3
-                elif event.key == pygame.K_RETURN:
-                    return difficulties[selected]
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                for i in range(3):
-                    button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 3 + i * 80, 200, 60)
-                    if button_rect.collidepoint(event.pos):
-                        return difficulties[i]
-            elif event.type == pygame.MOUSEMOTION:
-                for i in range(3):
-                    button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 3 + i * 80, 200, 60)
-                    if button_rect.collidepoint(event.pos):
-                        selected = i
-
-# Main game loop
 def main():
+    # Initialize the game
+    board = chess.Board()
+    selected_square = None
+    last_move = None
+    running = True
+    game_over = False
+    difficulty = "medium"  # Default difficulty
+    
+    # Load images
     load_images()
     
-    while True:
-        difficulty = select_difficulty()
-        board = chess.Board()
-        selected_square = None
-        last_move = None
-        restart_button = None
-        game_over = False
-        running = True
+    while running:
+        # Draw the board and pieces
+        draw_board()
+        draw_pieces(board)
+        draw_highlights(board, selected_square, last_move)
+        restart_button = draw_info_panel(board, difficulty)
+        pygame.display.flip()
         
-        while running:
-            # Draw game elements
-            draw_board()
-            draw_highlights(board, selected_square, last_move)
-            draw_pieces(board)
-            restart_button = draw_info_panel(board, difficulty)
+        # Check if game is over
+        if board.is_game_over() and not game_over:
+            game_over = True
+            if MOVE_SOUND:  # Play appropriate sound for checkmate
+                if board.is_checkmate():
+                    CHECK_SOUND.play()
+        
+        # If it's AI's turn and game is not over
+        if board.turn == chess.BLACK and not game_over:
+            # Show thinking message by redrawing the info panel
+            draw_info_panel(board, difficulty)
             pygame.display.flip()
             
-            # AI move
-            if board.turn == chess.BLACK and not game_over:
-                pygame.display.flip()  # Update display before AI thinks
-                time.sleep(0.5)  # Small delay to make it feel more natural
+            # Find and make the AI move
+            ai_move = find_best_move_with_timeout(board, difficulty)
+            if ai_move:
+                # Play appropriate sound
+                if board.is_capture(ai_move):
+                    if CAPTURE_SOUND:
+                        CAPTURE_SOUND.play()
+                elif ai_move.from_square in [chess.E1, chess.E8] and chess.square_file(ai_move.to_square) in [2, 6]:
+                    if CASTLE_SOUND:
+                        CASTLE_SOUND.play()
+                elif MOVE_SOUND:
+                    MOVE_SOUND.play()
                 
-                move = find_best_move(board, difficulty)
-                if move:
-                    # Play appropriate sound
-                    if board.is_capture(move):
-                        if CAPTURE_SOUND:
-                            CAPTURE_SOUND.play()
-                    else:
-                        if MOVE_SOUND:
-                            MOVE_SOUND.play()
-                    
-                    board.push(move)
-                    last_move = move
-                    
-                    # Check if move causes check
-                    if board.is_check():
-                        if CHECK_SOUND:
-                            CHECK_SOUND.play()
-                    
-                    # Check for game over after AI move
-                    if board.is_game_over():
-                        game_over = True
+                board.push(ai_move)
+                last_move = ai_move
+                
+                # Check if the move results in check
+                if board.is_check() and CHECK_SOUND:
+                    CHECK_SOUND.play()
+        
+        # Process events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
             
-            # Event handling
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = pygame.mouse.get_pos()
                 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = pygame.mouse.get_pos()
+                # Check if restart button was clicked
+                if restart_button.collidepoint(x, y):
+                    board = chess.Board()
+                    selected_square = None
+                    last_move = None
+                    game_over = False
+                    continue
+                
+                # Process board clicks only if it's human's turn and game is not over
+                if board.turn == chess.WHITE and not game_over and y < HEIGHT:
+                    file = x // SQUARE_SIZE
+                    rank = 7 - (y // SQUARE_SIZE)
+                    square = chess.square(file, rank)
                     
-                    # Check if restart button was clicked
-                    if restart_button and restart_button.collidepoint(x, y):
-                        running = False
-                        break
-                    
-                    # Handle board clicks
-                    if y < HEIGHT and board.turn == chess.WHITE and not game_over:
-                        col = x // SQUARE_SIZE
-                        row = 7 - y // SQUARE_SIZE
-                        square = chess.square(col, row)
+                    # If a square is already selected, try to make a move
+                    if selected_square is not None:
+                        move = chess.Move(selected_square, square)
+                        # Check for promotion
+                        if board.piece_at(selected_square) and board.piece_at(selected_square).piece_type == chess.PAWN:
+                            if rank == 7 or rank == 0:  # Promotion rank
+                                move.promotion = chess.QUEEN  # Default to queen promotion
                         
-                        if selected_square is None:
-                            # Select a piece
-                            piece = board.piece_at(square)
-                            if piece and piece.color == chess.WHITE:
-                                selected_square = square
-                        else:
-                            # Try to move the selected piece
-                            move = None
-                            piece = board.piece_at(selected_square)
+                        # Try to make the move
+                        if move in board.legal_moves:
+                            # Play appropriate sound
+                            if board.is_capture(move):
+                                if CAPTURE_SOUND:
+                                    CAPTURE_SOUND.play()
+                            elif move.from_square in [chess.E1, chess.E8] and chess.square_file(move.to_square) in [2, 6]:
+                                if CASTLE_SOUND:
+                                    CASTLE_SOUND.play()
+                            elif MOVE_SOUND:
+                                MOVE_SOUND.play()
                             
-                            # Check for pawn promotion
-                            if (piece and piece.piece_type == chess.PAWN and 
-                                chess.square_rank(selected_square) == 6 and 
-                                chess.square_rank(square) == 7):
-                                # Create a temporary move for validation
-                                temp_move = chess.Move(selected_square, square)
-                                if any(m == temp_move or m.from_square == temp_move.from_square and 
-                                      m.to_square == temp_move.to_square for m in board.legal_moves):
-                                    promotion = get_promotion_choice()
-                                    if promotion:
-                                        move = chess.Move(selected_square, square, promotion=promotion)
-                            else:
-                                move = chess.Move(selected_square, square)
-                            
-                            # If it's a valid move, make it
-                            if move and move in board.legal_moves:
-                                # Play appropriate sound
-                                if board.is_capture(move):
-                                    if CAPTURE_SOUND:
-                                        CAPTURE_SOUND.play()
-                                else:
-                                    if MOVE_SOUND:
-                                        MOVE_SOUND.play()
-                                
-                                board.push(move)
-                                last_move = move
-                                
-                                # Check if move causes check
-                                if board.is_check():
-                                    if CHECK_SOUND:
-                                        CHECK_SOUND.play()
-                                
-                                # Check for game over after human move
-                                if board.is_game_over():
-                                    game_over = True
-                            
+                            board.push(move)
+                            last_move = move
                             selected_square = None
+                            
+                            # Check if the move results in check
+                            if board.is_check() and CHECK_SOUND:
+                                CHECK_SOUND.play()
+                        else:
+                            # If the move is not valid, check if clicking on own piece to select it
+                            piece = board.piece_at(square)
+                            if piece and piece.color == board.turn:
+                                selected_square = square
+                            else:
+                                selected_square = None
+                    else:
+                        # No square selected yet, select if clicking on own piece
+                        piece = board.piece_at(square)
+                        if piece and piece.color == board.turn:
+                            selected_square = square
+            
+            # Handle keyboard input for difficulty change
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1 or event.key == pygame.K_e:
+                    difficulty = "easy"
+                elif event.key == pygame.K_2 or event.key == pygame.K_m:
+                    difficulty = "medium"
+                elif event.key == pygame.K_3 or event.key == pygame.K_h:
+                    difficulty = "hard"
+        
+        # Limit frame rate
+        pygame.time.Clock().tick(60)
+    
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        pygame.quit()
-        sys.exit(1)
+    main()
