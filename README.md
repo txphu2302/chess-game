@@ -55,7 +55,7 @@ pip install -r requirements.txt
 - Quân đen
     - bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
 
-### ⚠️ Lưu ý: Nếu thiếu tài nguyên, trò chơi sẽ sử dụng ký tự văn bản thay thế.
+⚠️ Lưu ý: Nếu thiếu tài nguyên, trò chơi sẽ sử dụng ký tự văn bản thay thế.
 
 ## ▶️ Chạy Trò Chơi
 
