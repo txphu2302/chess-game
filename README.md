@@ -1,90 +1,134 @@
-Trò Chơi Cờ Vua
+# ♟️ Trò Chơi Cờ Vua
+
 Một trò chơi cờ vua đơn giản được lập trình bằng Python và Pygame, có giao diện đồ họa và đối thủ AI với các mức độ khó tùy chỉnh.
-Mô Tả
+
+---
+
+## 📝 Mô Tả
+
 Dự án này là một trò chơi cờ vua 2D, cho phép người chơi đấu với AI hoặc xem hai AI thi đấu trong chế độ demo. Các tính năng bao gồm:
 
-Chế độ Người vs AI: Chơi với vai trò Trắng hoặc Đen chống lại AI với ba mức độ khó (Dễ, Trung Bình, Khó).
-Chế độ AI vs AI (Demo): Xem AI Trắng (sử dụng mức độ khó đã chọn) thi đấu với AI Đen (sử dụng logic ngẫu nhiên giống mức Dễ).
-Tính năng: Kiểm tra nước đi hợp lệ, phát hiện chiếu/các nước chiếu hết, chọn phong cấp, hiệu ứng âm thanh, và AI đơn giản dựa trên thuật toán minimax với cắt tỉa alpha-beta.
+- **Chế độ Người vs AI**: Chơi với vai trò Trắng hoặc Đen chống lại AI với ba mức độ khó (Dễ, Trung Bình, Khó).
+- **Chế độ AI vs AI (Demo)**: Xem AI Trắng (dùng mức độ khó đã chọn) thi đấu với AI Đen (dùng logic ngẫu nhiên như mức Dễ).
+- **Các tính năng nổi bật**:
+  - Kiểm tra nước đi hợp lệ
+  - Phát hiện chiếu, chiếu hết, và bế tắc
+  - Chọn phong cấp
+  - Hiệu ứng âm thanh
+  - AI đơn giản dựa trên thuật toán minimax với cắt tỉa alpha-beta
 
-Cài Đặt
-Điều Kiện Tiền Thiệt
+---
 
-Python 3.x
-Thư viện cần thiết:
-pygame
-python-chess
+## ⚙️ Cài Đặt
+
+### Yêu Cầu
+
+- Python 3.x  
+- Thư viện:
+  - `pygame`
+  - `python-chess`
+
+### Thiết Lập
+
+```bash
+# Clone repository
+git clone https://github.com/txphu2302/chess-game
+cd chess-game
+
+# Cài đặt các thư viện
+pip install -r requirements.txt
+
+```
+
+## 📁 Thư Mục **assets** Cần Chứa
+
+**File âm thanh:**
+- move-self.wav
+- capture.wav
+- castle.wav
+- move-check.wav
 
 
+**Hình ảnh quân cờ:**
+- Quân trắng
+    - wP.png, wN.png, wB.png, wR.png, wQ.png, wK.png
+- Quân đen
+    - bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
 
-Thiết Lập
+### ⚠️ Lưu ý: Nếu thiếu tài nguyên, trò chơi sẽ sử dụng ký tự văn bản thay thế.
 
-Clone repository:
-git clone https://github.com/username/ChessGame.git
-cd ChessGame
+## ▶️ Chạy Trò Chơi
 
-
-Cài đặt các thư viện:
-pip install pygame python-chess
-
-
-Đảm bảo thư mục assets chứa:
-
-File âm thanh: move-self.wav, capture.wav, castle.wav, move-check.wav
-Hình ảnh quân cờ: wP.png, wN.png, wB.png, wR.png, wQ.png, wK.png, bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
-(Nếu thiếu, trò chơi sẽ sử dụng hình ảnh thay thế bằng văn bản.)
-
-
-Chạy trò chơi:
+```bash
 python chess_game.py
 
+```
 
+## 🎮 Hướng Dẫn Sử Dụng
 
-Hướng Dẫn Sử Dụng
-Menu Chính
+### Menu Chính
 
-Người vs AI: Chọn màu cờ (Trắng, Đen, hoặc Ngẫu nhiên) và mức độ khó (Dễ, Trung Bình, Khó, hoặc Ngẫu nhiên).
-AI vs AI (Demo): Xem hai AI thi đấu, với AI Trắng dùng mức độ khó đã chọn và AI Đen dùng logic ngẫu nhiên.
-Thoát Trò Chơi: Thoát ứng dụng.
+- **Người vs AI**: Chọn màu (Trắng, Đen, Ngẫu nhiên) và mức độ khó (Dễ, Trung Bình, Khó, hoặc Ngẫu nhiên).
 
-Trong Trò Chơi
+- **AI vs AI (Demo)**: Xem hai AI tự động thi đấu.
 
-Nhấp chuột vào quân cờ để chọn, sau đó nhấp vào ô đích hợp lệ để di chuyển.
-Phong cấp: Khi quân tốt đến cuối bàn cờ đối phương, chọn một quân (Hậu, Xe, Tượng, Mã) từ menu phong cấp.
-Kết Thúc Trò Chơi: Hiển thị khi có chiếu hết, bế tắc, hoặc hòa, với tùy chọn chơi lại hoặc trở về menu chính.
-Thanh Thông Tin: Hiển thị lượt đi, mức độ khó, và các nút để bắt đầu lại hoặc quay về menu chính.
+- **Thoát Trò Chơi**: Thoát khỏi ứng dụng.
 
-Điều Khiển
+### Trong Trò Chơi
 
-Chuột: Nhấp để chọn và di chuyển quân cờ.
-Nút: Sử dụng các nút trên màn hình để điều hướng menu và hành động trong trò chơi.
+- **Di chuyển quân**: Nhấp vào quân → nhấp vào ô muốn đi nếu hợp lệ.
 
-Tính Năng
+- **Phong cấp**: Chọn quân (Hậu, Xe, Tượng, Mã) khi Tốt đến cuối bàn.
 
-Mức Độ Khó:
-Dễ: Nước đi ngẫu nhiên với 70% cơ hội bắt quân.
-Trung Bình: Thuật toán minimax cơ bản với độ sâu 1.
-Khó: Thuật toán minimax với cắt tỉa alpha-beta và độ sâu 3.
+- **Kết thúc**: Hiển thị trạng thái chiếu hết, bế tắc hoặc hòa, kèm tùy chọn chơi lại hoặc quay về menu.
 
+- **Thanh thông tin**: Hiển thị lượt đi, độ khó, và các nút điều hướng.
 
-Chế độ AI vs AI Demo: AI Trắng dùng mức độ khó đã chọn, AI Đen dùng logic ngẫu nhiên giống mức Dễ.
-Hiệu Ứng Thị Giác: Đánh dấu ô đã chọn, nước đi cuối, và trạng thái chiếu.
-Hiệu Ứng Âm Thanh: Âm thanh cho nước đi, bắt quân, nhập thành, và chiếu (nếu có file tài nguyên).
+### Điều Khiển
 
-Phát Triển
-Đóng Góp
-Hãy fork repository này và gửi pull request. Các đề xuất cải tiến (ví dụ: AI tốt hơn, giao diện đẹp hơn) luôn được chào đón!
-Nhật Ký Thay Đổi
+- **Chuột**: Dùng để chọn và di chuyển quân.
 
-05/03/2025: Điều chỉnh chế độ AI vs AI Demo - AI Trắng dùng mức Khó, AI Đen dùng logic ngẫu nhiên giống mức Dễ. Cải thiện căn chỉnh menu phong cấp và màn hình kết thúc để hiển thị nước đi cuối.
+- **Nút giao diện**: Thao tác trong menu và khi kết thúc ván.
 
-Vấn Đề Đã Biết
+## 🧠 Tính Năng
+### Mức Độ Khó
+- **Dễ**: AI đi ngẫu nhiên, ưu tiên bắt quân (70%).
 
-Hiệu ứng âm thanh yêu cầu các file tài nguyên cụ thể; nếu thiếu, trò chơi sẽ chuyển sang chế độ thay thế.
-Hiệu suất AI có thể chậm ở mức độ khó cao do độ sâu minimax.
+- **Trung Bình**: Sử dụng thuật toán Minimax độ sâu 1.
 
-Giấy Phép
-[Giấy phép MIT] 
+- **Khó**: Minimax có cắt tỉa alpha-beta, độ sâu 3 (chậm hơn nhưng thông minh hơn).
 
-Liên Hệ
-Để đặt câu hỏi hoặc nhận hỗ trợ, liên hệ [toilaphu23@example.com] hoặc mở một issue trên repository này.
+### AI vs AI (Demo)
+- AI Trắng dùng độ khó do người dùng chọn.
+
+- AI Đen sử dụng chiến thuật ngẫu nhiên như mức Dễ.
+
+### Hiệu Ứng
+- **Hoạt ảnh**: Tô màu ô được chọn, nước đi cuối cùng, cảnh báo chiếu.
+
+- **Âm thanh**: Kêu hiệu ứng khi di chuyển, ăn quân, nhập thành, chiếu nếu có file tương ứng.
+
+## 🛠️ Phát Triển
+### Đóng Góp
+Bạn có thể fork repository và gửi Pull Request.
+Đóng góp được hoan nghênh, đặc biệt là:
+
+- Cải tiến thuật toán AI
+
+- Giao diện người dùng đẹp hơn
+
+- Thêm chức năng như lưu/load ván cờ
+
+## ⚠️ Vấn Đề Đã Biết
+- Các hiệu ứng âm thanh yêu cầu đúng file tên trong thư mục assets.
+
+- Ở độ khó cao, AI có thể tính toán hơi lâu tùy vào máy tính của bạn.
+
+## 📄 Giấy Phép
+Phần mềm này sử dụng Giấy phép MIT.
+Bạn có thể dùng, sửa đổi, phân phối lại miễn phí theo điều kiện trong giấy phép.
+
+## 📬 Liên Hệ
+📧 Email: toilaphu23@example.com
+
+🐞 Gửi lỗi / góp ý: Vui lòng mở issue trên GitHub repository
