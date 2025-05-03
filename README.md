@@ -1,90 +1,90 @@
-Chess Game
-A simple chess game implemented using Python and Pygame, featuring a graphical interface and AI opponents with adjustable difficulty levels.
-Description
-This project is a 2D chess game where players can play against an AI or watch two AIs compete in a demo mode. The game includes:
+Trò Chơi Cờ Vua
+Một trò chơi cờ vua đơn giản được lập trình bằng Python và Pygame, có giao diện đồ họa và đối thủ AI với các mức độ khó tùy chỉnh.
+Mô Tả
+Dự án này là một trò chơi cờ vua 2D, cho phép người chơi đấu với AI hoặc xem hai AI thi đấu trong chế độ demo. Các tính năng bao gồm:
 
-Human vs AI Mode: Play as White or Black against an AI with three difficulty levels (Easy, Medium, Hard).
-AI vs AI Demo Mode: Watch AI White (using selected difficulty) compete against AI Black (using Easy/Random logic).
-Features: Move validation, check/checkmate detection, promotion selection, sound effects, and a simple AI based on minimax with alpha-beta pruning.
+Chế độ Người vs AI: Chơi với vai trò Trắng hoặc Đen chống lại AI với ba mức độ khó (Dễ, Trung Bình, Khó).
+Chế độ AI vs AI (Demo): Xem AI Trắng (sử dụng mức độ khó đã chọn) thi đấu với AI Đen (sử dụng logic ngẫu nhiên giống mức Dễ).
+Tính năng: Kiểm tra nước đi hợp lệ, phát hiện chiếu/các nước chiếu hết, chọn phong cấp, hiệu ứng âm thanh, và AI đơn giản dựa trên thuật toán minimax với cắt tỉa alpha-beta.
 
-Installation
-Prerequisites
+Cài Đặt
+Điều Kiện Tiền Thiệt
 
 Python 3.x
-Required libraries:
+Thư viện cần thiết:
 pygame
 python-chess
 
 
 
-Setup
+Thiết Lập
 
-Clone the repository:
+Clone repository:
 git clone https://github.com/username/ChessGame.git
 cd ChessGame
 
 
-Install dependencies:
+Cài đặt các thư viện:
 pip install pygame python-chess
 
 
-Ensure the assets folder contains:
+Đảm bảo thư mục assets chứa:
 
-Sound files: move-self.wav, capture.wav, castle.wav, move-check.wav
-Piece images: wP.png, wN.png, wB.png, wR.png, wQ.png, wK.png, bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
-(If missing, the game will use fallback text-based images.)
+File âm thanh: move-self.wav, capture.wav, castle.wav, move-check.wav
+Hình ảnh quân cờ: wP.png, wN.png, wB.png, wR.png, wQ.png, wK.png, bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
+(Nếu thiếu, trò chơi sẽ sử dụng hình ảnh thay thế bằng văn bản.)
 
 
-Run the game:
+Chạy trò chơi:
 python chess_game.py
 
 
 
-Usage
-Main Menu
+Hướng Dẫn Sử Dụng
+Menu Chính
 
-Human vs AI: Select your color (White, Black, or Random) and difficulty (Easy, Medium, Hard, or Random).
-AI vs AI (Demo): Watch two AIs play, with White using the selected difficulty and Black using Easy/Random logic.
-Exit Game: Quit the application.
+Người vs AI: Chọn màu cờ (Trắng, Đen, hoặc Ngẫu nhiên) và mức độ khó (Dễ, Trung Bình, Khó, hoặc Ngẫu nhiên).
+AI vs AI (Demo): Xem hai AI thi đấu, với AI Trắng dùng mức độ khó đã chọn và AI Đen dùng logic ngẫu nhiên.
+Thoát Trò Chơi: Thoát ứng dụng.
 
-In-Game
+Trong Trò Chơi
 
-Click on a piece to select it, then click a valid destination square to move.
-Promotion: When a pawn reaches the opponent's end, choose a piece (Queen, Rook, Bishop, Knight) from the promotion menu.
-Game Over: Displayed when checkmate, stalemate, or draw occurs, with options to play again or return to the main menu.
-Info Panel: Shows whose turn it is, difficulty, and buttons for New Game or Main Menu.
+Nhấp chuột vào quân cờ để chọn, sau đó nhấp vào ô đích hợp lệ để di chuyển.
+Phong cấp: Khi quân tốt đến cuối bàn cờ đối phương, chọn một quân (Hậu, Xe, Tượng, Mã) từ menu phong cấp.
+Kết Thúc Trò Chơi: Hiển thị khi có chiếu hết, bế tắc, hoặc hòa, với tùy chọn chơi lại hoặc trở về menu chính.
+Thanh Thông Tin: Hiển thị lượt đi, mức độ khó, và các nút để bắt đầu lại hoặc quay về menu chính.
 
-Controls
+Điều Khiển
 
-Mouse: Click to select and move pieces.
-Buttons: Use on-screen buttons for menu navigation and game actions.
+Chuột: Nhấp để chọn và di chuyển quân cờ.
+Nút: Sử dụng các nút trên màn hình để điều hướng menu và hành động trong trò chơi.
 
-Features
+Tính Năng
 
-Difficulty Levels:
-Easy: Random moves with 70% chance to capture.
-Medium: Basic minimax with depth 1.
-Hard: Minimax with alpha-beta pruning and depth 3.
+Mức Độ Khó:
+Dễ: Nước đi ngẫu nhiên với 70% cơ hội bắt quân.
+Trung Bình: Thuật toán minimax cơ bản với độ sâu 1.
+Khó: Thuật toán minimax với cắt tỉa alpha-beta và độ sâu 3.
 
 
-AI vs AI Demo: White AI uses the selected difficulty, Black AI uses Easy/Random logic.
-Visuals: Highlighted selected squares, last move, and check status.
-Sound Effects: Move, capture, castle, and check sounds (if assets are available).
+Chế độ AI vs AI Demo: AI Trắng dùng mức độ khó đã chọn, AI Đen dùng logic ngẫu nhiên giống mức Dễ.
+Hiệu Ứng Thị Giác: Đánh dấu ô đã chọn, nước đi cuối, và trạng thái chiếu.
+Hiệu Ứng Âm Thanh: Âm thanh cho nước đi, bắt quân, nhập thành, và chiếu (nếu có file tài nguyên).
 
-Development
-Contributing
-Feel free to fork this repository and submit pull requests. Suggestions for improvements (e.g., better AI, GUI enhancements) are welcome!
-Change Log
+Phát Triển
+Đóng Góp
+Hãy fork repository này và gửi pull request. Các đề xuất cải tiến (ví dụ: AI tốt hơn, giao diện đẹp hơn) luôn được chào đón!
+Nhật Ký Thay Đổi
 
-05/03/2025: Adjusted AI vs AI Demo mode - White uses Hard, Black uses Easy Random logic. Improved promotion menu alignment and game over screen to show the last move.
+05/03/2025: Điều chỉnh chế độ AI vs AI Demo - AI Trắng dùng mức Khó, AI Đen dùng logic ngẫu nhiên giống mức Dễ. Cải thiện căn chỉnh menu phong cấp và màn hình kết thúc để hiển thị nước đi cuối.
 
-Known Issues
+Vấn Đề Đã Biết
 
-Sound effects require specific asset files; missing files trigger fallback mode.
-AI performance may slow down at higher difficulties due to minimax depth.
+Hiệu ứng âm thanh yêu cầu các file tài nguyên cụ thể; nếu thiếu, trò chơi sẽ chuyển sang chế độ thay thế.
+Hiệu suất AI có thể chậm ở mức độ khó cao do độ sâu minimax.
 
-License
-[MIT License] 
+Giấy Phép
+[Giấy phép MIT] 
 
-Contact
-For questions or support, contact [toilaphu23@example.com] or open an issue on this repository.
+Liên Hệ
+Để đặt câu hỏi hoặc nhận hỗ trợ, liên hệ [toilaphu23@example.com] hoặc mở một issue trên repository này.
