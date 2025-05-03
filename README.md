@@ -40,6 +40,9 @@ pip install -r requirements.txt
 
 ```
 
+---
+
+
 ## 📁 Thư Mục **assets** Cần Chứa
 
 **File âm thanh:**
@@ -56,6 +59,9 @@ pip install -r requirements.txt
     - bP.png, bN.png, bB.png, bR.png, bQ.png, bK.png
 
 ⚠️ Lưu ý: Nếu thiếu tài nguyên, trò chơi sẽ sử dụng ký tự văn bản thay thế.
+
+---
+
 
 ## ▶️ Chạy Trò Chơi
 
@@ -108,6 +114,9 @@ python chess_game.py
 
 - **Âm thanh**: Kêu hiệu ứng khi di chuyển, ăn quân, nhập thành, chiếu nếu có file tương ứng.
 
+---
+
+
 ## 🛠️ Phát Triển
 ### Đóng Góp
 Bạn có thể fork repository và gửi Pull Request.
@@ -119,14 +128,22 @@ Bạn có thể fork repository và gửi Pull Request.
 
 - Thêm chức năng như lưu/load ván cờ
 
+---
+
+
 ## ⚠️ Vấn Đề Đã Biết
 - Các hiệu ứng âm thanh yêu cầu đúng file tên trong thư mục assets.
 
 - Ở độ khó cao, AI có thể tính toán hơi lâu tùy vào máy tính của bạn.
 
+---
+
+
 ## 📄 Giấy Phép
 Phần mềm này sử dụng Giấy phép MIT.
 Bạn có thể dùng, sửa đổi, phân phối lại miễn phí theo điều kiện trong giấy phép.
+
+---
 
 ## 📬 Liên Hệ
 📧 Email: toilaphu23@example.com
