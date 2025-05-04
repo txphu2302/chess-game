@@ -146,6 +146,6 @@ Bạn có thể dùng, sửa đổi, phân phối lại miễn phí theo điều
 ---
 
 ## 📬 Liên Hệ
-📧 Email: toilaphu23@example.com
+📧 Email: toilaphu23@gmail.com
 
 🐞 Gửi lỗi / góp ý: Vui lòng mở issue trên GitHub repository
