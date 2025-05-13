@@ -12,8 +12,9 @@ pygame.mixer.init()
 # Constants
 WIDTH, HEIGHT = 640, 640
 INFO_HEIGHT = 60
+LOG_WIDTH = 200
 SQUARE_SIZE = WIDTH // 8
-screen = pygame.display.set_mode((WIDTH, HEIGHT + INFO_HEIGHT))
+screen = pygame.display.set_mode((WIDTH + LOG_WIDTH, HEIGHT + INFO_HEIGHT))
 pygame.display.set_caption("Chess Game")
 
 # Colors
@@ -28,6 +29,7 @@ BUTTON_COLOR = pygame.Color(70, 130, 180)
 BUTTON_HOVER_COLOR = pygame.Color(100, 149, 237)
 MENU_BG_COLOR = pygame.Color(40, 40, 40)
 TITLE_COLOR = pygame.Color(255, 215, 0)
+LOG_BG_COLOR = pygame.Color(30, 30, 30)
 
 # Sounds
 try:
@@ -93,45 +95,32 @@ class Button:
 # Main menu screen
 def show_main_menu():
     button_width, button_height = 300, 60
-    x_pos = WIDTH // 2 - button_width // 2
-    
-    human_vs_ai_button = Button(
-        pygame.Rect(x_pos, 250, button_width, button_height),
-        "Human vs AI"
-    )
-    
-    ai_vs_ai_button = Button(
-        pygame.Rect(x_pos, 330, button_width, button_height),
-        "AI vs AI (Demo)"
-    )
-    
-    exit_button = Button(
-        pygame.Rect(x_pos, 410, button_width, button_height),
-        "Exit Game"
-    )
-    
-    buttons = [human_vs_ai_button, ai_vs_ai_button, exit_button]
-    
-    running = True
-    selected_mode = None
+    total_w = WIDTH + LOG_WIDTH
     ai_color = None
-    
+    # center cả vùng menu theo tổng chiều rộng
+    x_pos = total_w // 2 - button_width // 2
+
+    human_vs_ai_button = Button(pygame.Rect(x_pos, 250, button_width, button_height), "Human vs AI")
+    ai_vs_ai_button = Button(pygame.Rect(x_pos, 330, button_width, button_height), "AI vs AI (Demo)")
+    exit_button    = Button(pygame.Rect(x_pos, 410, button_width, button_height), "Exit Game")
+    buttons = [human_vs_ai_button, ai_vs_ai_button, exit_button]
+
+    running = True
     while running:
         screen.fill(MENU_BG_COLOR)
-        
+        # title cũng căn giữa
         font_title = pygame.font.SysFont("arial", 48, bold=True)
         title_text = font_title.render("Chess Game", True, TITLE_COLOR)
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
-        
+        screen.blit(title_text, (total_w//2 - title_text.get_width()//2, 100))
+        # version nằm ngay dưới và cũng căn giữa
         font_version = pygame.font.SysFont("arial", 18)
         version_text = font_version.render("v1.1", True, TEXT_COLOR)
-        screen.blit(version_text, (WIDTH - version_text.get_width() - 10, HEIGHT + INFO_HEIGHT - version_text.get_height() - 10))
-        
+        screen.blit(version_text, (total_w//2 - version_text.get_width()//2, HEIGHT + INFO_HEIGHT - version_text.get_height() - 10))
+
         mouse_pos = pygame.mouse.get_pos()
-        for button in buttons:
-            button.update(mouse_pos)
-            button.draw(screen)
-        
+        for b in buttons:
+            b.update(mouse_pos)
+            b.draw(screen)
         pygame.display.flip()
         
         for event in pygame.event.get():
@@ -140,6 +129,9 @@ def show_main_menu():
             
             if human_vs_ai_button.handle_event(event):
                 selected_mode = "human_vs_ai"
+                running = False
+                selected_mode = "human_vs_ai"
+                ai_color = None
                 running = False
             elif ai_vs_ai_button.handle_event(event):
                 selected_mode = "ai_vs_ai"
@@ -159,46 +151,25 @@ def show_main_menu():
 # Color selection screen
 def show_color_selection(title="Select Your Color"):
     button_width, button_height = 300, 60
-    x_pos = WIDTH // 2 - button_width // 2
-    
-    white_button = Button(
-        pygame.Rect(x_pos, 250, button_width, button_height),
-        "Play as White"
-    )
-    
-    black_button = Button(
-        pygame.Rect(x_pos, 330, button_width, button_height),
-        "Play as Black"
-    )
-    
-    random_button = Button(
-        pygame.Rect(x_pos, 410, button_width, button_height),
-        "Random Color"
-    )
-    
-    back_button = Button(
-        pygame.Rect(x_pos, 490, button_width, button_height),
-        "Back to Main Menu",
-        color=pygame.Color(150, 50, 50)
-    )
-    
+    total_w = WIDTH + LOG_WIDTH
+    x_pos = total_w // 2 - button_width // 2
+
+    white_button  = Button(pygame.Rect(x_pos, 250, button_width, button_height), "Play as White")
+    black_button  = Button(pygame.Rect(x_pos, 330, button_width, button_height), "Play as Black")
+    random_button = Button(pygame.Rect(x_pos, 410, button_width, button_height), "Random Color")
+    back_button   = Button(pygame.Rect(x_pos, 490, button_width, button_height), "Back to Main Menu", color=pygame.Color(150,50,50))
     buttons = [white_button, black_button, random_button, back_button]
-    
+
     running = True
-    selected_color = None
-    
     while running:
         screen.fill(MENU_BG_COLOR)
-        
         font_title = pygame.font.SysFont("arial", 48, bold=True)
         title_text = font_title.render(title, True, TITLE_COLOR)
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
-        
+        screen.blit(title_text, (total_w//2 - title_text.get_width()//2, 100))
         mouse_pos = pygame.mouse.get_pos()
-        for button in buttons:
-            button.update(mouse_pos)
-            button.draw(screen)
-        
+        for b in buttons:
+            b.update(mouse_pos)
+            b.draw(screen)
         pygame.display.flip()
         
         for event in pygame.event.get():
@@ -224,56 +195,32 @@ def show_color_selection(title="Select Your Color"):
 # Difficulty selection screen
 def show_difficulty_menu(mode):
     button_width, button_height = 300, 60
-    x_pos = WIDTH // 2 - button_width // 2
-    
-    easy_button = Button(
-        pygame.Rect(x_pos, 250, button_width, button_height),
-        "Easy"
-    )
-    
-    medium_button = Button(
-        pygame.Rect(x_pos, 330, button_width, button_height),
-        "Medium"
-    )
-    
-    hard_button = Button(
-        pygame.Rect(x_pos, 410, button_width, button_height),
-        "Hard"
-    )
-    
-    random_button = Button(
-        pygame.Rect(x_pos, 490, button_width, button_height),
-        "Random Mode"
-    )
-    
-    back_button = Button(
-        pygame.Rect(x_pos, 570, button_width, button_height),
-        "Back",
-        color=pygame.Color(150, 50, 50)
-    )
-    
+    total_w = WIDTH + LOG_WIDTH
+    x_pos = total_w // 2 - button_width // 2
+
+    easy_button   = Button(pygame.Rect(x_pos, 250, button_width, button_height), "Easy")
+    medium_button = Button(pygame.Rect(x_pos, 330, button_width, button_height), "Medium")
+    hard_button   = Button(pygame.Rect(x_pos, 410, button_width, button_height), "Hard")
+    random_button = Button(pygame.Rect(x_pos, 490, button_width, button_height), "Random Mode")
+    back_button   = Button(pygame.Rect(x_pos, 570, button_width, button_height), "Back", color=pygame.Color(150,50,50))
     buttons = [easy_button, medium_button, hard_button, random_button, back_button]
-    
+
     running = True
-    selected_difficulty = None
-    
     while running:
         screen.fill(MENU_BG_COLOR)
-        
         font_title = pygame.font.SysFont("arial", 48, bold=True)
         title_text = font_title.render("Select Difficulty", True, TITLE_COLOR)
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
-        
+        screen.blit(title_text, (total_w//2 - title_text.get_width()//2, 100))
+        # hiển thị mode cũng căn giữa
         font_mode = pygame.font.SysFont("arial", 24)
-        mode_text = "Human vs AI" if mode == "human_vs_ai" else "AI vs AI Demo"
+        mode_text = "Human vs AI" if mode=="human_vs_ai" else "AI vs AI Demo"
         mode_render = font_mode.render(f"Mode: {mode_text}", True, TEXT_COLOR)
-        screen.blit(mode_render, (WIDTH // 2 - mode_render.get_width() // 2, 170))
-        
+        screen.blit(mode_render, (total_w//2 - mode_render.get_width()//2, 170))
+
         mouse_pos = pygame.mouse.get_pos()
-        for button in buttons:
-            button.update(mouse_pos)
-            button.draw(screen)
-        
+        for b in buttons:
+            b.update(mouse_pos)
+            b.draw(screen)
         pygame.display.flip()
         
         for event in pygame.event.get():
@@ -294,7 +241,7 @@ def show_difficulty_menu(mode):
                 selected_difficulty = random.choice(difficulties)
                 font_notification = pygame.font.SysFont("arial", 36)
                 notification = font_notification.render(f"Selected: {selected_difficulty.capitalize()}", True, TITLE_COLOR)
-                screen.blit(notification, (WIDTH // 2 - notification.get_width() // 2, HEIGHT - 100))
+                screen.blit(notification, ((WIDTH - LOG_WIDTH) // 2 - notification.get_width() // 2, HEIGHT - 100))
                 pygame.display.flip()
                 time.sleep(1.5)
                 running = False
@@ -310,7 +257,6 @@ def draw_board(player_color=None, ai_color=None):
     for r in range(8):
         for c in range(8):
             color = LIGHT_SQUARE if (r + c) % 2 == 0 else DARK_SQUARE
-            # Xoay bàn cờ nếu người chơi chính hoặc AI chính chơi đen
             if (player_color == "black" and player_color is not None) or (ai_color == "black" and ai_color is not None):
                 pygame.draw.rect(screen, color, pygame.Rect(c*SQUARE_SIZE, (7-r)*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             else:
@@ -319,18 +265,10 @@ def draw_board(player_color=None, ai_color=None):
     font = pygame.font.SysFont("arial", 12)
     for i in range(8):
         file_text = font.render(chr(97 + i), True, DARK_SQUARE if i % 2 == 0 else LIGHT_SQUARE)
-        # Xoay file (a-h) nếu cần
-        if (player_color == "black" and player_color is not None) or (ai_color == "black" and ai_color is not None):
-            screen.blit(file_text, (i * SQUARE_SIZE + SQUARE_SIZE - 12, HEIGHT - 12))
-        else:
-            screen.blit(file_text, (i * SQUARE_SIZE + SQUARE_SIZE - 12, HEIGHT - 12))
+        screen.blit(file_text, (i * SQUARE_SIZE + SQUARE_SIZE - 12, HEIGHT - 12))
         
         rank_text = font.render(str(8 - i), True, DARK_SQUARE if i % 2 == 1 else LIGHT_SQUARE)
-        # Xoay rank (1-8) nếu cần
-        if (player_color == "black" and player_color is not None) or (ai_color == "black" and ai_color is not None):
-            screen.blit(rank_text, (5, (7-i) * SQUARE_SIZE + 5))
-        else:
-            screen.blit(rank_text, (5, i * SQUARE_SIZE + 5))
+        screen.blit(rank_text, (5, i * SQUARE_SIZE + 5))
 
 # Draw pieces
 def draw_pieces(board, player_color=None, ai_color=None):
@@ -338,7 +276,6 @@ def draw_pieces(board, player_color=None, ai_color=None):
         piece = board.piece_at(square)
         if piece:
             col = chess.square_file(square)
-            # Xoay hàng nếu người chơi chính hoặc AI chính chơi đen
             row = 7 - chess.square_rank(square) if not ((player_color == "black" and player_color is not None) or 
                                                        (ai_color == "black" and ai_color is not None)) else chess.square_rank(square)
             color = 'w' if piece.color == chess.WHITE else 'b'
@@ -349,7 +286,6 @@ def draw_pieces(board, player_color=None, ai_color=None):
 def draw_highlights(board, selected_square, last_move, player_color=None, ai_color=None):
     if selected_square is not None:
         col = chess.square_file(selected_square)
-        # Xoay hàng nếu cần
         row = 7 - chess.square_rank(selected_square) if not ((player_color == "black" and player_color is not None) or 
                                                            (ai_color == "black" and ai_color is not None)) else chess.square_rank(selected_square)
         pygame.draw.rect(screen, HIGHLIGHT_COLOR, (col*SQUARE_SIZE, row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 4)
@@ -389,7 +325,7 @@ def draw_highlights(board, selected_square, last_move, player_color=None, ai_col
 
 # Draw info panel
 def draw_info_panel(board, difficulty, mode, player_color=None):
-    pygame.draw.rect(screen, INFO_BG_COLOR, (0, HEIGHT, WIDTH, INFO_HEIGHT))
+    pygame.draw.rect(screen, INFO_BG_COLOR, (0, HEIGHT, WIDTH + LOG_WIDTH, INFO_HEIGHT))
     
     font = pygame.font.SysFont("arial", 20)
     
@@ -403,63 +339,57 @@ def draw_info_panel(board, difficulty, mode, player_color=None):
     
     if board.is_check():
         turn_text += " - CHECK!"
-    if board.is_checkmate():
-        winner = "White" if board.turn == chess.BLACK else "Black"
-        turn_text = f"Checkmate! {winner} wins!"
-    elif board.is_stalemate():
-        turn_text = "Stalemate! Draw!"
-    elif board.is_insufficient_material():
-        turn_text = "Draw due to insufficient material!"
-    elif board.can_claim_draw():
-        turn_text = "Draw claim available (50-move rule or repetition)"
     
     status_text = font.render(turn_text, True, TEXT_COLOR)
     screen.blit(status_text, (20, HEIGHT + 20))
     
     diff_text = font.render(f"Difficulty: {difficulty.capitalize()}", True, TEXT_COLOR)
-    screen.blit(diff_text, (WIDTH - diff_text.get_width() - 20, HEIGHT + 20))
+    screen.blit(diff_text, (WIDTH + LOG_WIDTH - diff_text.get_width() - 20, HEIGHT + 20))
     
-    button_width = 120
-    restart_button = pygame.Rect(WIDTH // 2 - button_width - 10, HEIGHT + 15, button_width, 30)
-    menu_button = pygame.Rect(WIDTH // 2 + 10, HEIGHT + 15, button_width, 30)
-    
-    if restart_button.collidepoint(pygame.mouse.get_pos()):
-        pygame.draw.rect(screen, BUTTON_HOVER_COLOR, restart_button)
-    else:
-        pygame.draw.rect(screen, BUTTON_COLOR, restart_button)
-    
-    if menu_button.collidepoint(pygame.mouse.get_pos()):
-        pygame.draw.rect(screen, BUTTON_HOVER_COLOR, menu_button)
-    else:
-        pygame.draw.rect(screen, BUTTON_COLOR, menu_button)
-    
-    restart_text = font.render("New Game", True, TEXT_COLOR)
-    menu_text = font.render("Main Menu", True, TEXT_COLOR)
-    
-    screen.blit(restart_text, (restart_button.centerx - restart_text.get_width() // 2, 
-                            restart_button.centery - restart_text.get_height() // 2))
-    screen.blit(menu_text, (menu_button.centerx - menu_text.get_width() // 2, 
-                          menu_button.centery - menu_text.get_height() // 2))
-    
-    return restart_button, menu_button
+    return None, None
+
+# Draw move log
+def draw_move_log(move_history):
+    log_rect = pygame.Rect(WIDTH, 0, LOG_WIDTH, HEIGHT)
+    pygame.draw.rect(screen, LOG_BG_COLOR, log_rect)
+
+    font = pygame.font.SysFont("arial", 16)
+    line_height = font.get_height() + 4
+    max_lines = HEIGHT // line_height
+
+    # chỉ lấy N dòng cuối cùng
+    history = move_history[-max_lines:]
+    start_index = len(move_history) - len(history)
+
+    y_offset = 10
+    for i, move in enumerate(history):
+        abs_i = start_index + i
+        move_num = (abs_i // 2) + 1
+        # chẵn: in số, lẻ: in nước thứ hai
+        text = f"{move_num}. {move}" if abs_i % 2 == 0 else move
+        surf = font.render(text, True, TEXT_COLOR)
+        screen.blit(surf, (WIDTH + 10, y_offset))
+        y_offset += line_height
+
+    pygame.draw.rect(screen, TITLE_COLOR, log_rect, 2)
 
 # Promotion selection screen
 def show_promotion_menu(piece_color):
-    overlay = pygame.Surface((WIDTH, HEIGHT + INFO_HEIGHT), pygame.SRCALPHA)
+    overlay = pygame.Surface((WIDTH + LOG_WIDTH, HEIGHT + INFO_HEIGHT), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 180))
     screen.blit(overlay, (0, 0))
     
-    promo_box = pygame.Rect(WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2)
+    promo_box = pygame.Rect((WIDTH - LOG_WIDTH)//4, HEIGHT//4, (WIDTH - LOG_WIDTH)//2, HEIGHT//2)
     pygame.draw.rect(screen, MENU_BG_COLOR, promo_box)
     pygame.draw.rect(screen, TITLE_COLOR, promo_box, 4)
     
     font_title = pygame.font.SysFont("arial", 36, bold=True)
     title_text = font_title.render("Select Promotion", True, TITLE_COLOR)
-    screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//4 + 20))
+    screen.blit(title_text, ((WIDTH - LOG_WIDTH)//2 - title_text.get_width()//2, HEIGHT//4 + 20))
     
     button_width, button_height = 80, 80
     spacing = 20
-    x_start = WIDTH//2 - (button_width * 2 + spacing) // 2
+    x_start = (WIDTH - LOG_WIDTH)//2 - (button_width * 2 + spacing) // 2
     y_start = HEIGHT//4 + 80
     
     queen_button = Button(
@@ -531,17 +461,15 @@ def show_promotion_menu(piece_color):
     return selected_piece
 
 # Game result screen
-def show_game_result(board, last_move, result, mode, difficulty, player_color=None, ai_color=None):
+def show_game_result(board, last_move, result, mode, difficulty, move_history, player_color=None, ai_color=None):
     draw_board(player_color, ai_color)
     draw_highlights(board, None, last_move, player_color, ai_color)
     draw_pieces(board, player_color, ai_color)
     draw_info_panel(board, difficulty, mode, player_color)
+    draw_move_log(move_history)
     
-    overlay = pygame.Surface((WIDTH, HEIGHT + INFO_HEIGHT), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))
-    screen.blit(overlay, (0, 0))
-    
-    result_box = pygame.Rect(WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2)
+    result_box_height = 200
+    result_box = pygame.Rect(0, HEIGHT, WIDTH + LOG_WIDTH, result_box_height)
     pygame.draw.rect(screen, MENU_BG_COLOR, result_box)
     pygame.draw.rect(screen, TITLE_COLOR, result_box, 4)
     
@@ -549,31 +477,31 @@ def show_game_result(board, last_move, result, mode, difficulty, player_color=No
     font_info = pygame.font.SysFont("arial", 24)
     
     title_text = font_title.render("Game Over", True, TITLE_COLOR)
-    screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, HEIGHT//4 + 30))
+    screen.blit(title_text, ((WIDTH + LOG_WIDTH)//2 - title_text.get_width()//2, HEIGHT + 20))
     
     result_text = font_info.render(result, True, TEXT_COLOR)
-    screen.blit(result_text, (WIDTH//2 - result_text.get_width()//2, HEIGHT//4 + 100))
+    screen.blit(result_text, ((WIDTH + LOG_WIDTH)//2 - result_text.get_width()//2, HEIGHT + 70))
     
     mode_text = "Human vs AI" if mode == "human_vs_ai" else "AI vs AI Demo"
     mode_render = font_info.render(f"Mode: {mode_text}", True, TEXT_COLOR)
-    screen.blit(mode_render, (WIDTH//2 - mode_render.get_width()//2, HEIGHT//4 + 150))
+    screen.blit(mode_render, ((WIDTH + LOG_WIDTH)//2 - mode_render.get_width()//2, HEIGHT + 110))
     
     diff_render = font_info.render(f"Difficulty: {difficulty.capitalize()}", True, TEXT_COLOR)
-    screen.blit(diff_render, (WIDTH//2 - diff_render.get_width()//2, HEIGHT//4 + 190))
+    screen.blit(diff_render, ((WIDTH + LOG_WIDTH)//2 - diff_render.get_width()//2, HEIGHT + 150))
     
     button_width, button_height = 200, 50
     spacing = 20
     total_height = button_height * 2 + spacing
-    start_y = HEIGHT//4 + (HEIGHT//2 - total_height) // 2 + 150
+    start_y = HEIGHT + (result_box_height - total_height) // 2 - 20
     
     play_again_button = Button(
-        pygame.Rect(WIDTH//2 - button_width//2, start_y, button_width, button_height),
+        pygame.Rect((WIDTH + LOG_WIDTH)//2 - button_width//2, start_y, button_width, button_height),
         "Play Again",
         font_size=24
     )
     
     main_menu_button = Button(
-        pygame.Rect(WIDTH//2 - button_width//2, start_y + button_height + spacing, button_width, button_height),
+        pygame.Rect((WIDTH + LOG_WIDTH)//2 - button_width//2, start_y + button_height + spacing, button_width, button_height),
         "Main Menu",
         font_size=24
     )
@@ -606,7 +534,7 @@ def show_game_result(board, last_move, result, mode, difficulty, player_color=No
     
     return action
 
-# Piece-square tables
+# Corrected piece-square tables (64 elements each)
 piece_square_tables = {
     chess.PAWN: [
         0,  0,  0,  0,  0,  0,  0,  0,
@@ -670,7 +598,7 @@ piece_square_tables = {
     ]
 }
 
-# End game king piece square table
+# End game king piece square table (64 elements)
 king_endgame_table = [
     -50,-40,-30,-20,-20,-30,-40,-50,
     -30,-20,-10,  0,  0,-10,-20,-30,
@@ -739,18 +667,14 @@ def evaluate_board(board, difficulty):
             for piece_type in piece_square_tables:
                 if piece_type == chess.KING and len(list(board.piece_map().keys())) <= 12:
                     for square in board.pieces(piece_type, chess.WHITE):
-                        if 0 <= square <= 63:
-                            score += king_endgame_table[square] / 10
+                        score += king_endgame_table[square] / 10
                     for square in board.pieces(piece_type, chess.BLACK):
-                        if 0 <= square <= 63:
-                            score -= king_endgame_table[63 - square] / 10
+                        score -= king_endgame_table[63 - square] / 10
                 else:
                     for square in board.pieces(piece_type, chess.WHITE):
-                        if 0 <= square <= 63:
-                            score += piece_square_tables[piece_type][square] / 10
+                        score += piece_square_tables[piece_type][square] / 10
                     for square in board.pieces(piece_type, chess.BLACK):
-                        if 0 <= square <= 63:
-                            score -= piece_square_tables[piece_type][63 - square] / 10
+                        score -= piece_square_tables[piece_type][63 - square] / 10
         
         if difficulty == "hard":
             current_turn = board.turn
@@ -804,7 +728,7 @@ def evaluate_board(board, difficulty):
         return score
     
     except Exception as e:
-        print(f"Error in evaluate_board: {str(e)}")
+        print(f"Error in evaluate_board: {str(e)} with board state: {board.fen()}")
         return 0
 
 # Alpha-Beta with memory
@@ -864,7 +788,7 @@ def alpha_beta_with_memory(board, depth, alpha, beta, is_max, difficulty):
             return min_eval
     
     except Exception as e:
-        print(f"Error in alpha_beta_with_memory (depth: {depth}, is_max: {is_max}): {str(e)}")
+        print(f"Error in alpha_beta_with_memory (depth: {depth}, is_max: {is_max}): {str(e)} with board state: {board.fen()}")
         return evaluate_board(board, difficulty)
 
 # AI move with error handling
@@ -946,24 +870,29 @@ def make_ai_move(board, difficulty):
             return best_move
     
     except Exception as e:
-        print(f"Error in make_ai_move (difficulty: {difficulty}): {str(e)}")
+        print(f"Error in make_ai_move (difficulty: {difficulty}): {str(e)} with board state: {board.fen()}")
         return None
 
-# Main game function (Adjusted for AI vs AI Demo)
+# Main game function with move log and debug
 def play_game(mode, difficulty, player_color=None, ai_color=None):
     board = chess.Board()
     selected_square = None
     last_move = None
+    move_history = []
     promotion_pending = False
     pending_move = None
     
     if mode == "human_vs_ai" and player_color == "black" and board.turn == chess.WHITE:
         ai_move = make_ai_move(board, difficulty)
         if ai_move:
+            move_san = board.san(ai_move)
             board.push(ai_move)
+            move_history.append(move_san)
             last_move = ai_move
             if MOVE_SOUND:
                 MOVE_SOUND.play()
+        else:
+            print("AI failed to make initial move!")
     
     clock = pygame.time.Clock()
     running = True
@@ -974,7 +903,8 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
         draw_board(player_color, ai_color)
         draw_highlights(board, selected_square, last_move, player_color, ai_color)
         draw_pieces(board, player_color, ai_color)
-        restart_button, menu_button = draw_info_panel(board, difficulty, mode, player_color)
+        draw_info_panel(board, difficulty, mode, player_color)
+        draw_move_log(move_history)
         
         if promotion_pending:
             piece_color = 'w' if board.turn == chess.WHITE else 'b'
@@ -983,7 +913,9 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
                 return "quit"
             
             final_move = chess.Move(pending_move.from_square, pending_move.to_square, promotion=promotion_choice)
+            move_san = board.san(final_move)
             board.push(final_move)
+            move_history.append(move_san)
             last_move = final_move
             if MOVE_SOUND:
                 MOVE_SOUND.play()
@@ -997,80 +929,97 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("Quit event detected, exiting game.")
                 return "quit"
             
             if mode == "human_vs_ai" and ((player_color == "white" and board.turn == chess.WHITE) or 
-                                        (player_color == "black" and board.turn == chess.BLACK)):
+                              (player_color == "black" and board.turn == chess.BLACK)):
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     x, y = pygame.mouse.get_pos()
+                    print(f"Mouse click at ({x}, {y})")
                     
                     if 0 <= x < WIDTH and 0 <= y < HEIGHT:
                         file = x // SQUARE_SIZE
-                        # Xoay rank để xử lý click từ góc nhìn người chơi
                         rank = 7 - (y // SQUARE_SIZE) if player_color != "black" else (y // SQUARE_SIZE)
                         square = chess.square(file, rank)
+                        print(f"Selected square: {chess.square_name(square)}")
                         
                         piece = board.piece_at(square)
                         if selected_square is None:
                             if piece and piece.color == board.turn:
                                 selected_square = square
+                                print(f"Selected piece at {chess.square_name(square)}")
                         else:
-                            move = chess.Move(selected_square, square)
+                            to_square = square
+                            # Find the matching legal move
+                            legal_move = None
+                            for m in board.legal_moves:
+                                if m.from_square == selected_square and m.to_square == to_square:
+                                    legal_move = m
+                                    break
+                            
                             piece = board.piece_at(selected_square)
                             
                             is_promotion = False
                             if piece and piece.piece_type == chess.PAWN:
-                                if (piece.color == chess.WHITE and chess.square_rank(square) == 7) or \
-                                   (piece.color == chess.BLACK and chess.square_rank(square) == 0):
+                                if (piece.color == chess.WHITE and chess.square_rank(to_square) == 7) or \
+                                (piece.color == chess.BLACK and chess.square_rank(to_square) == 0):
                                     is_promotion = True
                             
                             if is_promotion:
                                 promotion_pending = True
-                                pending_move = move
+                                pending_move = legal_move if legal_move else chess.Move(selected_square, to_square)
+                                print(f"Promotion pending for move {chess.Move.uci(pending_move)}")
                                 continue
                             else:
-                                if move in board.legal_moves:
-                                    if board.is_capture(move):
-                                        if CAPTURE_SOUND:
+                                print(f"Attempting move: {chess.Move.uci(legal_move) if legal_move else chess.Move.uci(chess.Move(selected_square, to_square))}")
+                                if legal_move:
+                                    print(f"Move {chess.Move.uci(legal_move)} is legal")
+                                    try:
+                                        is_capture = board.is_capture(legal_move)
+                                        is_castle  = board.is_castling(legal_move)
+                                        move_san = board.san(legal_move)
+                                        board.push(legal_move)
+                                        print(f"Move pushed: {chess.Move.uci(legal_move)}")
+                                        move_history.append(move_san)
+                                        print(f"Move history updated: {move_san}")
+                                        last_move = legal_move
+                                        selected_square = None
+                                        # play sound tương ứng
+                                        if is_capture and CAPTURE_SOUND:
                                             CAPTURE_SOUND.play()
-                                    elif board.is_castling(move):
-                                        if CASTLE_SOUND:
+                                            print("Capture sound played")
+                                        elif is_castle and CASTLE_SOUND:
                                             CASTLE_SOUND.play()
-                                    else:
-                                        if MOVE_SOUND:
+                                            print("Castle sound played")
+                                        elif MOVE_SOUND:
                                             MOVE_SOUND.play()
-                                    
-                                    board.push(move)
-                                    last_move = move
-                                    selected_square = None
-                                    
-                                    if board.is_check():
-                                        if CHECK_SOUND:
+                                            print("Move sound played")
+                                        # nếu có check thì thêm sound check
+                                        if board.is_check() and CHECK_SOUND:
                                             CHECK_SOUND.play()
+                                            print("Check sound played")
+                                        print(f"Move made: {move_san}")
+                                    except Exception as e:
+                                        print(f"Error during move execution: {str(e)} with board state: {board.fen()}")
+                                        board.pop()
                                 else:
+                                    print(f"Move {chess.Move.uci(chess.Move(selected_square, to_square))} is illegal")
                                     if piece and piece.color == board.turn:
-                                        selected_square = square
+                                        selected_square = to_square
+                                        print(f"Re-selected piece at {chess.square_name(to_square)}")
                                     else:
                                         selected_square = None
+                                        print("Invalid move or no piece selected")
                     else:
                         selected_square = None
-            
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_pos = pygame.mouse.get_pos()
-                if restart_button.collidepoint(mouse_pos):
-                    return "restart"
-                elif menu_button.collidepoint(mouse_pos):
-                    return "menu"
+                        print("Click outside board, resetting selection")
         
         if not board.is_game_over():
             if mode == "ai_vs_ai":
-                # In AI vs AI mode, the main AI (selected difficulty) plays the chosen color
-                if ai_color == "white":
-                    current_difficulty = difficulty if board.turn == chess.WHITE else "easy"
-                else:  # ai_color == "black"
-                    current_difficulty = difficulty if board.turn == chess.BLACK else "easy"
+                current_difficulty = difficulty if (ai_color == "white" and board.turn == chess.WHITE) or \
+                                               (ai_color == "black" and board.turn == chess.BLACK) else "easy"
             else:
-                # In Human vs AI mode, use the selected difficulty for the AI
                 current_difficulty = difficulty if ((player_color == "white" and board.turn == chess.BLACK) or 
                                                     (player_color == "black" and board.turn == chess.WHITE)) else None
             
@@ -1078,6 +1027,7 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
                 if not ai_thinking:
                     ai_thinking = True
                     ai_move_time = time.time() + 0.5
+                    print(f"AI thinking started for {current_difficulty} at turn {board.turn}")
                 
                 elif time.time() > ai_move_time:
                     ai_move = make_ai_move(board, current_difficulty)
@@ -1091,14 +1041,16 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
                         else:
                             if MOVE_SOUND:
                                 MOVE_SOUND.play()
-                        
+                        move_san = board.san(ai_move)
                         board.push(ai_move)
+                        move_history.append(move_san)
                         last_move = ai_move
+                        print(f"AI move made: {move_san}")
                         if board.is_check():
                             if CHECK_SOUND:
                                 CHECK_SOUND.play()
                     else:
-                        print("Warning: AI failed to produce a move")
+                        print(f"Warning: AI failed to produce a move with board state: {board.fen()}")
                     ai_thinking = False
         
         if board.is_game_over():
@@ -1117,7 +1069,8 @@ def play_game(mode, difficulty, player_color=None, ai_color=None):
             else:
                 result_message = "Game over!"
             
-            result = show_game_result(board, last_move, result_message, mode, difficulty, player_color, ai_color)
+            print(f"Game over detected: {result_message}")
+            result = show_game_result(board, last_move, result_message, mode, difficulty, move_history, player_color, ai_color)
             return result
         
         pygame.display.flip()
